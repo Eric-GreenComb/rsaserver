@@ -18,7 +18,7 @@ func RsaGenKey(bits int, user string) error {
 	}
 	derStream := x509.MarshalPKCS1PrivateKey(privateKey)
 	block := &pem.Block{
-		Type:  "private key",
+		Type:  "RSA PRIVATE KEY",
 		Bytes: derStream,
 	}
 	file, err := os.Create(user + "private.pem")
@@ -36,7 +36,7 @@ func RsaGenKey(bits int, user string) error {
 		return err
 	}
 	block = &pem.Block{
-		Type:  "public key",
+		Type:  "PUBLIC KEY",
 		Bytes: derPkix,
 	}
 	file, err = os.Create(user + "public.pem")
