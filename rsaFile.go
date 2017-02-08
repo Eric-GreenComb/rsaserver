@@ -4,7 +4,9 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/pem"
+	"log"
 	"os"
 )
 
@@ -29,6 +31,23 @@ func RsaGenKey(bits int, user string) error {
 	if err != nil {
 		return err
 	}
+
+	// 生成PKCS8私钥文件
+
+	derPKCS8Stream := MarshalPKCS8PrivateKey(privateKey)
+	blockPKCS8 := &pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: derPKCS8Stream,
+	}
+	filePKCS8, err := os.Create("pkcs8_private.pem")
+	if err != nil {
+		return err
+	}
+	err = pem.Encode(filePKCS8, blockPKCS8)
+	if err != nil {
+		return err
+	}
+
 	// 生成公钥文件
 	publicKey := &privateKey.PublicKey
 	derPkix, err := x509.MarshalPKIXPublicKey(publicKey)
@@ -49,4 +68,22 @@ func RsaGenKey(bits int, user string) error {
 	}
 
 	return nil
+}
+
+func MarshalPKCS8PrivateKey(key *rsa.PrivateKey) []byte {
+	info := struct {
+		Version             int
+		PrivateKeyAlgorithm []asn1.ObjectIdentifier
+		PrivateKey          []byte
+	}{}
+	info.Version = 0
+	info.PrivateKeyAlgorithm = make([]asn1.ObjectIdentifier, 1)
+	info.PrivateKeyAlgorithm[0] = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
+	info.PrivateKey = x509.MarshalPKCS1PrivateKey(key)
+
+	k, err := asn1.Marshal(info)
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	return k
 }
