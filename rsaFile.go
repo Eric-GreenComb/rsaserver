@@ -39,7 +39,7 @@ func RsaGenKey(bits int, user string) error {
 		Type:  "PRIVATE KEY",
 		Bytes: derPKCS8Stream,
 	}
-	filePKCS8, err := os.Create("pkcs8_private.pem")
+	filePKCS8, err := os.Create(user + "pkcs8_private.pem")
 	if err != nil {
 		return err
 	}

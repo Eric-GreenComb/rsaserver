@@ -9,8 +9,6 @@ import (
 	"io/ioutil"
 )
 
-var DB = make(map[string]string)
-
 func main() {
 	r := gin.Default()
 
@@ -34,7 +32,13 @@ func main() {
 			return
 		}
 
-		c.JSON(200, gin.H{"user": user, "privateKey": string(privateKey)})
+		privatePkcs8Key, err := getPkcs8Key(user, "private")
+		if err != nil {
+			c.JSON(200, gin.H{"user": "", "key": "", "hash": ""})
+			return
+		}
+
+		c.JSON(200, gin.H{"user": user, "privateKey": string(privateKey), "privatePkcs8Key": string(privatePkcs8Key)})
 
 	})
 
@@ -146,6 +150,14 @@ func main() {
 
 func getKey(user, keytype string) ([]byte, error) {
 	key, err := ioutil.ReadFile(user + keytype + ".pem")
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
+}
+
+func getPkcs8Key(user, keytype string) ([]byte, error) {
+	key, err := ioutil.ReadFile(user + "pkcs8_private.pem")
 	if err != nil {
 		return nil, err
 	}
